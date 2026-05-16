@@ -1,0 +1,36 @@
+name: AURELIAN::OVERMIND Ω Daily Run
+
+on:
+  schedule:
+    - cron: '0 14 * * *'   # Runs daily at 10:00 AM EDT
+  workflow_dispatch:       # Allows you to run manually anytime
+
+jobs:
+  run-engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Run AURELIAN Overmind Engine
+        run: |
+          python aurelian_overmind.py > output.json
+          echo "# AURELIAN::OVERMIND Ω Daily Storefront" > output.md
+          python -c '
+import json
+with open("output.json") as f:
+    data = json.load(f)
+print(data.get("storefront", "No storefront generated"))
+' >> output.md
+      
+      - name: Commit & Push Results
+        run: |
+          git config user.name "Aurelian Overmind"
+          git config user.email "operator@positivechange.institute"
+          git add output.json output.md
+          git commit -m "AURELIAN::OVERMIND Ω Daily Run - $(date)" || echo "No changes to commit"
+          git push
